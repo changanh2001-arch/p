@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ thống Ôn thi Trắc nghiệm - 会計與財務報表分析</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700&family=Noto+Sans+TC:wght=300;400;500;700&display=swap');
+        body { 
+            font-family: 'Inter', 'Noto Sans TC', sans-serif; 
+            background-color: #f8fafc; 
+        }
+        .chart-container { 
+            position: relative; 
+            width: 100%; 
+            max-width: 500px; 
+            margin-left: auto; 
+            margin-right: auto; 
+            height: 300px; 
+            max-height: 350px; 
+        }
+        .glass-morphism { 
+            background: rgba(255, 255, 255, 0.9); 
+            backdrop-filter: blur(10px); 
+            border: 1px solid rgba(255, 255, 255, 0.2); 
+        }
+        .card-flip { 
+            perspective: 1000px; 
+            cursor: pointer; 
+        }
+        .card-inner { 
+            transition: transform 0.6s; 
+            transform-style: preserve-3d; 
+            position: relative; 
+            height: 320px; 
+        }
+        .card-inner.is-flipped { 
+            transform: rotateY(180deg); 
+        }
+        .card-front, .card-back { 
+            backface-visibility: hidden; 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            display: flex; 
+            flex-direction: column;
+            align-items: center; 
+            justify-content: center; 
+            padding: 2rem; 
+            text-align: center; 
+            border-radius: 1rem; 
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); 
+        }
+        .card-back { 
+            transform: rotateY(180deg); 
+            background-color: #f5f3ff; 
+        }
+        .btn-animate { 
+            transition: all 0.2s; 
+        }
+        .btn-animate:active { 
+            transform: scale(0.95); 
+        }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <div id="app" class="min-h-screen pb-12">
+        <!-- Navigation -->
+        <nav class="bg-white border-b sticky top-0 z-50 px-4 py-3 shadow-sm">
+            <div class="max-w-6xl mx-auto flex justify-between items-center">
+                <div class="flex items-center gap-2 font-bold text-blue-600 text-xl cursor-pointer" onclick="switchView('home')">
+                    <span class="bg-blue-600 text-white p-1.5 rounded-lg text-lg">📝</span>
+                    <span>SmartQuiz <span class="text-xs font-normal text-slate-400">v2.3</span></span>
+                </div>
+                <div class="flex gap-4 items-center">
+                    <button onclick="switchView('editor')" class="text-sm font-semibold text-slate-500 hover:text-blue-600 transition">Quản lý đề / 題庫管理</button>
+                    <button onclick="switchView('home')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold px-4 py-2 rounded-lg transition">Trang chủ / 首頁</button>
+                </div>
+            </div>
+        </nav>
+
+        <main class="max-w-6xl mx-auto mt-6 px-4">
+            
+            <!-- VIEW: HOME (Inspired by image_3c7124.png) -->
+            <section id="view-home" class="view-section animate-fade-in">
+                <div class="bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden">
+                    <div class="flex flex-col lg:flex-row">
+                        <!-- Left Cover Illustration Area -->
+                        <div class="lg:w-1/3 bg-gradient-to-br from-indigo-500 to-purple-600 p-8 flex flex-col items-center justify-center relative overflow-hidden text-white min-h-[300px]">
+                            <div class="absolute -top-10 -left-10 w-44 h-44 bg-white/10 rounded-full blur-2xl"></div>
+                            <div class="absolute -bottom-10 -right-10 w-44 h-44 bg-purple-300/20 rounded-full blur-2xl"></div>
+                            <div class="z-10 text-center flex flex-col items-center">
+                                <div class="w-32 h-32 bg-white/15 rounded-full flex items-center justify-center backdrop-blur-md mb-4 border border-white/20 shadow-inner">
+                                    <span class="text-6xl">📊</span>
+                                </div>
+                                <span class="bg-white/20 px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase mb-2">TÀI LIỆU ÔN TẬP</span>
+                                <p class="text-xs text-indigo-100 italic">Accounting & Financial Analysis</p>
+                            </div>
+                        </div>
+
+                        <!-- Right Info Section from image_3c7124.png -->
+                        <div class="lg:w-2/3 p-6 lg:p-10 flex flex-col justify-between">
+                            <div class="flex flex-col md:flex-row justify-between gap-6">
+                                <div class="flex-1">
+                                    <h1 id="home-title" class="text-2xl lg:text-3xl font-extrabold text-slate-900 mb-4 leading-snug">
+                                        會計與財務報表分析 - 模擬試題
+                                    </h1>
+                                    <div class="flex items-center gap-3 mb-6">
+                                        <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-xl shadow-sm border border-amber-200">👩‍🏫</div>
+                                        <div>
+                                            <p id="home-author" class="font-bold text-slate-800">lê thị trang</p>
+                                            <p id="home-date" class="text-xs text-slate-400">📅 06/11/2025</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex flex-wrap gap-4 lg:gap-6 mb-6 text-sm text-slate-500 border-y border-slate-100 py-3.5">
+                                        <div class="flex items-center gap-1.5 font-medium">❓ <span id="stat-questions" class="font-bold text-slate-800">57</span> Câu hỏi / 題</div>
+                                        <div class="flex items-center gap-1.5 font-medium">📊 <span id="stat-level" class="font-bold text-slate-800">Tổng hợp / 綜合</span></div>
+                                        <div class="flex items-center gap-1.5 font-medium">
+                                            <button onclick="incrementLike()" class="hover:scale-110 active:scale-95 transition flex items-center gap-1 text-rose-500">
+                                                ❤️ <span id="stat-likes" class="font-bold text-slate-800">149</span> Thích
+                                            </button>
+                                        </div>
+                                        <div class="flex items-center gap-1.5 font-medium">📥 <span id="stat-downloads" class="font-bold text-slate-800">20</span> Lượt ôn thi</div>
+                                    </div>
+
+                                    <div class="mb-6 lg:mb-0">
+                                        <p class="text-xs font-bold text-slate-400 uppercase mb-2">Trường học / 學校</p>
+                                        <div class="inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 px-3.5 py-1.5 rounded-full text-xs font-bold border border-emerald-100 shadow-sm">
+                                            🏢 <span id="home-school">Đại học Kinh doanh và Công nghệ Hà Nội</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Share Box from image_3c7124.png -->
+                                <div class="md:w-64 bg-slate-50 p-5 rounded-2xl border border-slate-100 flex flex-col justify-between">
+                                    <div>
+                                        <p class="text-xs font-bold text-slate-500 mb-3 text-center tracking-wider">CHIA SẺ ĐỀ THI</p>
+                                        <div class="flex justify-center gap-3 mb-5">
+                                            <button onclick="toastShare('Facebook')" class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold hover:bg-blue-700 transition shadow-sm hover:scale-105 active:scale-95">f</button>
+                                            <button onclick="toastShare('LinkedIn')" class="w-10 h-10 rounded-full bg-cyan-600 text-white flex items-center justify-center font-bold hover:bg-cyan-700 transition shadow-sm hover:scale-105 active:scale-95">in</button>
+                                            <button onclick="toastShare('X')" class="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center font-bold hover:bg-zinc-900 transition shadow-sm hover:scale-105 active:scale-95">𝕏</button>
+                                        </div>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <button onclick="copyCurrentLink()" class="w-full bg-blue-500 text-white text-xs py-2.5 rounded-xl font-bold hover:bg-blue-600 hover:shadow-md transition btn-animate uppercase tracking-wide">
+                                            🔗 Sao chép link
+                                        </button>
+                                        <button onclick="showQRCode()" class="w-full bg-purple-600 text-white text-xs py-2.5 rounded-xl font-bold hover:bg-purple-700 hover:shadow-md transition btn-animate uppercase tracking-wide">
+                                            📱 Quét mã QRCode
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Nav Buttons Area (Directly from image_3c7124.png) -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 border-t border-slate-100">
+                        <button onclick="switchView('flashcards')" class="bg-[#a855f7] hover:bg-[#9333ea] text-white py-4.5 flex items-center justify-center gap-2 font-bold transition border-r border-white/10 btn-animate text-lg shadow-inner">
+                            🗂️ Thẻ ghi nhớ / 記憶卡
+                        </button>
+                        <button onclick="switchView('quiz')" class="bg-[#a855f7] hover:bg-[#9333ea] text-white py-4.5 flex items-center justify-center gap-2 font-bold transition border-r border-white/10 btn-animate text-lg">
+                            ▶️ Bắt đầu ôn thi / 開始測驗
+                        </button>
+                        <button onclick="exportQuestions()" class="bg-[#15803d] hover:bg-[#166534] text-white py-4.5 flex items-center justify-center gap-2 font-bold transition btn-animate text-lg">
+                            📥 Tải về / 下載題庫
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mt-4 p-4 bg-amber-50 text-amber-700 text-xs text-center rounded-xl border border-amber-100 shadow-sm font-medium">
+                    ⚠️ Tài liệu ôn thi chỉ có giá trị tham khảo và ôn tập, không phải đề thi thực tế.
+                </div>
+            </section>
+
+            <!-- VIEW: QUIZ -->
+            <section id="view-quiz" class="view-section hidden">
+                <div class="max-w-3xl mx-auto">
+                    <div class="mb-6 flex justify-between items-end">
+                        <div>
+                            <button onclick="switchView('home')" class="text-sm text-blue-600 font-bold hover:underline mb-2 block flex items-center gap-1">
+                                ← Quay lại trang chủ / 返回首頁
+                            </button>
+                            <h2 class="text-2xl font-bold text-slate-800">Chế độ Ôn tập / 測驗模式</h2>
+                        </div>
+                        <div class="text-right">
+                            <span id="quiz-progress-text" class="text-sm font-bold text-slate-500">Câu 1/57</span>
+                        </div>
+                    </div>
+
+                    <!-- Modern Progress bar -->
+                    <div class="w-full bg-slate-200 h-3 rounded-full mb-8 overflow-hidden shadow-inner">
+                        <div id="quiz-progress-bar" class="bg-gradient-to-r from-purple-500 to-indigo-600 h-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+
+                    <div id="question-card" class="bg-white p-6 md:p-8 rounded-2xl shadow-md border border-slate-200">
+                        <!-- Dynamic Question Card goes here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW: FLASHCARDS -->
+            <section id="view-flashcards" class="view-section hidden">
+                <div class="max-w-2xl mx-auto">
+                    <div class="mb-6 text-center">
+                        <button onclick="switchView('home')" class="text-sm text-blue-600 font-bold hover:underline mb-2 inline-block">
+                            ← Quay lại trang chủ / 返回首頁
+                        </button>
+                        <h2 class="text-2xl font-bold text-slate-800">Thẻ ghi nhớ thông minh / 智能記憶卡</h2>
+                        <p class="text-slate-500 text-sm mt-1">Nhấp vào thẻ để lật xem đáp án / 點擊卡片翻看答案</p>
+                    </div>
+
+                    <div id="flashcard-container" class="card-flip mb-8" onclick="flipCard()">
+                        <div id="card-inner" class="card-inner">
+                            <div class="card-front bg-white border-2 border-purple-100">
+                                <span class="absolute top-4 right-4 text-xs font-bold text-purple-400 bg-purple-50 px-2 py-1 rounded">CÂU HỎI</span>
+                                <p id="flash-front-text" class="text-lg md:text-xl font-semibold leading-relaxed text-slate-800"></p>
+                            </div>
+                            <div class="card-back border-2 border-purple-200 shadow-lg">
+                                <span class="absolute top-4 right-4 text-xs font-bold text-emerald-500 bg-emerald-50 px-2 py-1 rounded">禮/答案</span>
+                                <p id="flash-back-text" class="text-lg md:text-xl font-bold text-purple-800 px-4"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center px-4">
+                        <button onclick="prevFlashcard()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-6 py-2.5 rounded-xl font-bold transition btn-animate">Trước / 上一題</button>
+                        <span id="flash-counter" class="font-bold text-slate-400">1 / 57</span>
+                        <button onclick="nextFlashcard()" class="bg-purple-600 text-white hover:bg-purple-700 px-6 py-2.5 rounded-xl font-bold transition btn-animate">Sau / 下一題</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW: RESULT -->
+            <section id="view-result" class="view-section hidden text-center">
+                <div class="max-w-2xl mx-auto bg-white p-8 md:p-10 rounded-2xl shadow-xl border border-slate-100 animate-scale-up">
+                    <h2 class="text-3xl font-extrabold text-slate-900 mb-2">Hoàn thành bài ôn tập! 🎉</h2>
+                    <p class="text-slate-500 mb-8">Dưới đây là thống kê kết quả học tập của bạn</p>
+                    
+                    <div class="chart-container mb-8">
+                        <canvas id="resultChart"></canvas>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 mb-8">
+                        <div class="bg-emerald-50 p-4 rounded-2xl border border-emerald-100">
+                            <p class="text-xs font-bold text-emerald-600 uppercase tracking-wider">Đúng / 答對</p>
+                            <p id="score-correct" class="text-3xl font-black text-emerald-700">0</p>
+                        </div>
+                        <div class="bg-rose-50 p-4 rounded-2xl border border-rose-100">
+                            <p class="text-xs font-bold text-rose-600 uppercase tracking-wider">Sai / 答錯</p>
+                            <p id="score-wrong" class="text-3xl font-black text-rose-700">0</p>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <button onclick="switchView('home')" class="flex-1 bg-slate-900 text-white py-3.5 rounded-xl font-bold hover:bg-slate-800 transition shadow-md btn-animate">
+                            Về trang chủ / 返回首頁
+                        </button>
+                        <button onclick="startQuiz()" class="flex-1 bg-purple-600 text-white py-3.5 rounded-xl font-bold hover:bg-purple-700 transition shadow-md btn-animate">
+                            Làm lại / 重新測驗
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW: EDITOR -->
+            <section id="view-editor" class="view-section hidden">
+                <div class="max-w-4xl mx-auto">
+                    <h2 class="text-2xl font-bold mb-4 text-slate-800">Quản lý dữ liệu đề thi / 題庫資料管理</h2>
+                    <div class="bg-white p-6 rounded-2xl shadow-md border border-slate-200">
+                        <p class="text-sm text-slate-500 mb-4 italic">
+                            Hướng dẫn: Bạn có thể cập nhật, chỉnh sửa danh sách câu hỏi theo cấu trúc JSON bên dưới. Sau đó nhấn "Cập nhật".
+                        </p>
+                        <textarea id="json-input" class="w-full h-96 p-4 font-mono text-xs bg-slate-900 text-emerald-400 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 mb-6 shadow-inner"></textarea>
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            <button onclick="updateData()" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition btn-animate">
+                                Cập nhật đề thi / 更新題庫
+                            </button>
+                            <button onclick="resetToDefault()" class="px-6 py-3 border border-slate-300 rounded-xl font-bold text-slate-700 hover:bg-slate-50 transition btn-animate">
+                                Khôi phục mặc định / 恢復默認
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- QR Code / Share Toast Mockup Modals -->
+    <div id="modal-container" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden" onclick="closeModal()">
+        <div class="bg-white p-6 rounded-2xl max-w-sm w-full mx-4 text-center shadow-2xl relative" onclick="event.stopPropagation()">
+            <h3 id="modal-title" class="text-lg font-bold mb-2">Mã QR Đề thi</h3>
+            <div class="bg-slate-50 p-4 rounded-xl inline-block mb-4 border border-slate-100">
+                <img id="qr-image" src="" alt="Mã QR" class="w-[150px] h-[150px] mx-auto rounded-lg shadow-sm" onerror="this.src='https://placehold.co/150x150/f1f5f9/475569?text=QR+Code'"/>
+            </div>
+            
+            <div class="text-left bg-blue-50 p-3.5 rounded-xl border border-blue-100 mb-6">
+                <p class="text-[11px] text-blue-800 leading-relaxed font-semibold">
+                    💡 Hướng dẫn mở trên điện thoại cực nhanh:
+                </p>
+                <ol class="text-[10px] text-blue-700 list-decimal ml-4 mt-1.5 space-y-1">
+                    <li>Nhấn nút màu xanh lá <strong>"Tải về"</strong> ở trang chủ để tải file <code>accounting_quiz_data.json</code> (Nếu bạn muốn lưu trữ dữ liệu câu hỏi).</li>
+                    <li><strong>Cách tối ưu nhất:</strong> Bạn chỉ cần lưu trang web này lại bằng cách nhấn chuột phải chọn <strong>"Save page as..."</strong> (Lưu thành file <code>.html</code>).</li>
+                    <li>Gửi file <code>.html</code> này lên điện thoại của bạn (qua Zalo, Messenger, Drive, v.v.).</li>
+                    <li>Mở file trực tiếp trên điện thoại bằng Safari hoặc Chrome để làm bài ôn tập mượt mà <strong>mọi lúc mọi nơi không cần Internet!</strong></li>
+                </ol>
+            </div>
+            <button onclick="closeModal()" class="w-full bg-slate-900 text-white py-2.5 rounded-xl font-bold hover:bg-slate-800 transition">Đóng</button>
+        </div>
+    </div>
+
+    <!-- Alert and Toast Container -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 space-y-2 pointer-events-none"></div>
+
+    <script>
+        // --- DATA & STATE ---
+        const DEFAULT_CONFIG = {
+            title: "會計與財務報表分析 - 模擬試題",
+            author: "lê thị trang",
+            date: "06/11/2025",
+            school: "Đại học Kinh doanh và Công nghệ Hà Nội",
+            likes: 149,
+            downloads: 20
+        };
+
+        const DEFAULT_QUESTIONS = [
+            {
+                q: "1. 下列敘述何者正確？",
+                options: [
+                    "A. 資產－負債＝權益＋收入－費用",
+                    "B. 資產－負債＝權益－收入＋費用",
+                    "C. 資產＝負債－權益－收入＋費用",
+                    "D. 資產＝負債－權益＋收入－費用"
+                ],
+                correct: 0,
+                explain: "會計恆等式為：資產 = 負債 + 權益 + (收入 - 費用)。移項後可得：資產 - 負債 = 權益 + 收入 - 費用，故 (A) 正確。"
+            },
+            {
+                q: "2. 李霍詩上網到公開資訊觀測站查詢霍蕾公司後，得知該公司X5年各項收益為8,400萬元，各項費損為5,400萬元。請問她可容易且直接地從該網站財務報告書中的何處得知這項資訊？",
+                options: [
+                    "A. 資產負債表",
+                    "B. 重要會計政策彙總說明",
+                    "C. 綜合損益表",
+                    "D. 現金流量表"
+                ],
+                correct: 2,
+                explain: "收益與費損屬於經營成果，應記錄於綜合損益表中（綜合損益表反映特定期間之營運績效）。"
+            },
+            {
+                q: "3. 折舊攤銷主要是根據哪個會計觀念？",
+                options: [
+                    "A. 現金基礎會計",
+                    "B. 企業個體假設",
+                    "C. 會計期間假設",
+                    "D. 配合原則"
+                ],
+                correct: 3,
+                explain: "折舊是將長期資產 của 取得成本在其預期可取得效益的耐用年限內，合理且系統地分攤為各期費用，此程序符合收入與費用相互對應的「配合原則」。"
+            },
+            {
+                q: "4. 債權人分析公司財務報表之目的為何？",
+                options: [
+                    "A. 評估公司資本支出之效益",
+                    "B. 瞭解公司償還本息之能力",
+                    "C. 分析公司的資本結構",
+                    "D. 瞭解公司未來獲利能力"
+                ],
+                correct: 1,
+                explain: "債權人最關心的是其借出資金與利息能否如期回收，因此分析財報的核心目的在於評估企業的「短期及長期償債能力（償還本息之能力）」。"
+            },
+            {
+                q: "5. 甲公司調整後試算表部分項目如下：不動產、廠房及設備 $4,000,000、流動資產 $1,070,000、流動負債 780,000、非流動負債 1,510,000、無形資產 74,000、權益 1,360,000，則甲公司之營運資金為：",
+                options: [
+                    "A. $290,000",
+                    "B. $364,000",
+                    "C. $1,360,000",
+                    "D. $2,780,000"
+                ],
+                correct: 0,
+                explain: "營運資金（Working Capital） = 流動資產 - 流動負債 = $1,070,000 - $780,000 = $290,000。"
+            },
+            {
+                q: "6. 所謂企業的語言，是指什麼？",
+                options: [
+                    "A. 績效",
+                    "B. 稅務",
+                    "C. 會計",
+                    "D. 審計"
+                ],
+                correct: 2,
+                explain: "會計（Accounting）被廣泛稱為「企業的語言」， because 它是企業記錄、衡量、傳遞及解釋財務資訊與營運成果的主要工具。"
+            },
+            {
+                q: "7. 下列會計項目何者屬於損益類？",
+                options: [
+                    "A. 預付費用",
+                    "B. 預收收入",
+                    "C. 應付費用",
+                    "D. 利息收入"
+                ],
+                correct: 3,
+                explain: "利息收入屬於收益類（損益表項目）。(A)預付費用是資產，(B)預收收入與(C)應付費用皆為負債（資產負債表項目）。"
+            },
+            {
+                q: "8. 預付費用係屬於？",
+                options: [
+                    "A. 收入",
+                    "B. 費用",
+                    "C. 負債",
+                    "D. 資產"
+                ],
+                correct: 3,
+                explain: "預付費用代表企業已付款 but chưa tiêu dùng dịch vụ, có giá trị kinh tế tương lai, thuộc loại「資產（流動資產）」."
+            },
+            {
+                q: "9. 當會計師作成財務報表在所有重大方面係依照適用之財務報導架構編製之結論時，會計師應出具何種查核意見？",
+                options: [
+                    "A. 無保留意見",
+                    "B. 保留意見",
+                    "C. 否定意見",
+                    "D. 無法表示意見"
+                ],
+                correct: 0,
+                explain: "若財務報表在所有重大方面均允當表達，會計師應出具「無保留意見（Unmodified Opinion）」。"
+            },
+            {
+                q: "10. 若公司流動比率上升，但速動比率卻下降，表示公司可能有以下哪些問題？",
+                options: [
+                    "A. 現金過少",
+                    "B. 存貨大量增加",
+                    "C. 應收帳款週轉不靈",
+                    "D. 應付帳款成長太快"
+                ],
+                correct: 1,
+                explain: "速動比率將流動資產中的「存貨」與「預付費用」扣除。若流動比率上升（流動資產增加）但速動比率下降，意味著增加的流動資產主要累積在「存貨」中，即存貨大量增加。"
+            },
+            {
+                q: "11. 下列何者非屬財務報表要素？",
+                options: [
+                    "A. 資產、負債",
+                    "B. 員工 the 價值",
+                    "C. 權益",
+                    "D. 收益及費損"
+                ],
+                correct: 1,
+                explain: "財務報表要素包含資產、負債、權益、收益及費損。員工的價值因無法可靠衡量且非企業完全控制，不屬於會計認列的財務報表要素。"
+            },
+            {
+                q: "12. 收到客戶償付貨欠，該筆交易會影響哪些財務報表要素？",
+                options: [
+                    "A. 資產減少、負債減少",
+                    "B. 資產增加、負債增加",
+                    "C. 資產增加、資產減少",
+                    "D. 負債增加、負債減少"
+                ],
+                correct: 2,
+                explain: "收到客戶還款的分錄為：借記「現金」（資產增加），貸記「應收帳款」（資產減少）。此交易屬於資產內部的轉換，一增一減，總資產 không thay đổi."
+            },
+            {
+                q: "13. 折舊之目的在於：",
+                options: [
+                    "A. 累積重置設備所需資金",
+                    "B. 衡量資產價值因耗用而降低的程度",
+                    "C. 合理分攤設備資產成本",
+                    "D. 節省所得稅"
+                ],
+                correct: 2,
+                explain: "折舊並非衡量資產的市價下跌，亦非提撥現金準備以購買新資產，其本質是將固定資產의 取得成本，在耐用年限內「合理分攤」為各期費用。"
+            },
+            {
+                q: "14. 甲公司經營藥妝商品買賣，下列何者屬於甲公司之存貨項目？",
+                options: [
+                    "A. 代銷他公司之洗面乳",
+                    "B. 向供應商購買之美白面膜，起運點交貨，尚nằm 運送途中",
+                    "C. 安裝於員工辦公室之冷氣機",
+                    "D. 分期付款銷貨之護膚凝膠，顧客尚未付清尾款"
+                ],
+                correct: 1,
+                explain: "「起運點交貨」意即商品自起運地點出發後，所有權即歸買方。因此在途物資應歸屬甲公司的存貨。而代銷品所有權在委託方；冷氣機是固定資產；分期付款已銷貨商品所有權已移轉。"
+            },
+            {
+                q: "15. 企業委託會計師查核財務報表之主要原因為：",
+                options: [
+                    "A. 企業可能在編製財務報表時不夠客觀中立",
+                    "B. 若無會計師高度的專業協助，企業常難以編製允當之財務報表",
+                    "C. 提升財務報表的可靠性",
+                    "D. 為了保障投資大眾的利益"
+                ],
+                correct: 2,
+                explain: "會計師查核財務報表的核心價值是通過獨立第三方的審計意見，增進管理當局與預期使用者（如股東、債權人）之間的信任，進而「提升財務報表的可靠性（與公信力）」。"
+            },
+            {
+                q: "16. 下列何者最能反映企業運用股東投入資本 the 績效？",
+                options: [
+                    "A. 總資產報酬率",
+                    "B. 股東權益報酬率",
+                    "C. 每股淨值",
+                    "D. 股利支付率"
+                ],
+                correct: 1,
+                explain: "股東權益報酬率（ROE = 淨利 / 股東權益）直接計算股東每投入一元所產生的利潤，是衡量企業運用股東資金 efficiency 最核心的指標。"
+            },
+            {
+                q: "17. 一套完整的財務報表應 include ?",
+                options: [
+                    "A. 綜合損益表、資產負債表及工作底稿",
+                    "B. 試算表、資產負債表及現金流量表",
+                    "C. 銀行調節表、綜合損益表及現金流量表",
+                    "D. 綜合損益表、資產負債表、現金流量表及權益變動表"
+                ],
+                correct: 3,
+                explain: "依一般公認會計原則，完整的財務報表必須包含：資產負債表、綜合損益表、權益變動表、現金流量表以及財務報表附註。"
+            },
+            {
+                q: "18. 預收收入為何種性質之會計項目？",
+                options: [
+                    "A. 收益",
+                    "B. 費損",
+                    "C. 資產",
+                    "D. 負債"
+                ],
+                correct: 3,
+                explain: "預收收入是指先收到款項但尚未提供商品 or 服務, 這在會計上代表對客戶的義務, 因此屬於「負債 (流動負債)」."
+            },
+            {
+                q: "19. 甲公司本期營業收入 $2,000,000，營業成本 $1,450,000，營業費用 $270,000，利息費用 $70,000，假設所得稅稅率 25%，此外無其他損益項目。請問甲公司本期稅後淨利為何？",
+                options: [
+                    "A. $145,000",
+                    "B. $150,000",
+                    "C. $157,500",
+                    "D. $162,000"
+                ],
+                correct: 2,
+                explain: "稅前淨利 = $2,000,000 - $1,450,000 - $270,000 - $70,000 = $210,000。所得稅費用 = $210,000 * 25% = $52,500。稅後淨利 = $210,000 - $52,500 = $157,500。"
+            },
+            {
+                q: "20. 有關會計師查核報告，請找出正確的敘述：",
+                options: [
+                    "A. 會計師必須絕對保證財務報表的正確性",
+                    "B. 財務報表編製是會計師的責任",
+                    "C. 會計師對財務報表表示意見",
+                    "D. 財務報表編製由會計部門編製與公司管理階層無關"
+                ],
+                correct: 2,
+                explain: "會計師查核報告的核心是會計師對報表是否允當表達「表示意見」。財務報表編製是管理階層（而非會計師）的責任，會計師提供的是合理確信而非絕對保證。"
+            },
+            {
+                q: "21. 比較兩家營業規模相差數倍的公司時，下列何種方法最佳？",
+                options: [
+                    "A. 共同比財務報表分析",
+                    "B. 比較分析",
+                    "C. 水平分析",
+                    "D. 趨勢分析"
+                ],
+                correct: 0,
+                explain: "共同比財務報表將項目轉換為占資產總額或銷貨收入的「百分比」，可以有效消除公司因規模差異帶來的絕對金額偏差，是最適合跨規模比較的工具。"
+            },
+            {
+                q: "22. 流動比率與淨利率在財務報表 analysis 上，其主要作用是：",
+                options: [
+                    "A. 兩者皆為流動性之衡量",
+                    "B. 兩者皆為獲利性之衡量",
+                    "C. 流動比率為流動性之衡量，淨利率為獲利性之衡量",
+                    "D. 流動比率為獲利性之衡量，淨利率為流動性之衡量"
+                ],
+                correct: 2,
+                explain: "流動比率衡量的是企業短期償債能力（流動性指標）；淨利率（純益率）衡量的是企業營運賺取利潤的效率（獲利性指標）。"
+            },
+            {
+                q: "23. 財務報表由獨立的會計師執行審計工作可以降低及控制：",
+                options: [
+                    "A. 投資人的商業風險",
+                    "B. 投資人的資訊風險",
+                    "C. 財務報表的複雜度",
+                    "D. 財務報表的及時性"
+                ],
+                correct: 1,
+                explain: "獨立審計旨在提高財報的可信度，進而控制及降低報表使用者面臨的「資訊風險」（即報表可能存在重大不實表達的風險）。"
+            },
+            {
+                q: "24. 資產負債表與綜合損益表之連鎖關係在於：",
+                options: [
+                    "A. 業主往來",
+                    "B. 本期損益",
+                    "C. 銷貨成本",
+                    "D. 業主資本"
+                ],
+                correct: 1,
+                explain: "綜合損益表所算出的「本期損益（本期淨利）」會結轉至資產負債表權益項下的「保留盈餘」，這是兩張報表最基本的對接連鎖點。"
+            },
+            {
+                q: "25. 銷貨毛利等於：",
+                options: [
+                    "A. 銷貨收入 - 營業費用",
+                    "B. 銷貨收入 - 研發費用",
+                    "C. 銷貨收入 - 管理費用",
+                    "D. 銷貨收入 - 銷貨成本"
+                ],
+                correct: 3,
+                explain: "銷貨毛利 (Gross Profit) = 銷貨收入 - 銷貨成本 (營業成本)."
+            },
+            {
+                q: "26. 流動比率公式為：",
+                options: [
+                    "A. 流動負債 - 流動資產",
+                    "B. 流動資產 - 流動負債",
+                    "C. 流動資產 / 流動負債",
+                    "D. 流動資產 / 總資產"
+                ],
+                correct: 2,
+                explain: "流動比率 (Current Ratio) = 流動資產 / 流動負債, 用於分析短期償債能力."
+            },
+            {
+                q: "27. 有關會計師報表查核，請找出錯誤的敘述：",
+                options: [
+                    "A. 確保企業的財務報表允當表達",
+                    "B. 保護投資者與債權人的權益",
+                    "C. 對於報表錯誤負全部責任",
+                    "D. 財報編製是管理當局的責任"
+                ],
+                correct: 2,
+                explain: "財務報表編製의 最終責任始終在於企業의 管理當局，會計師僅對查核意見負責，不需為報表內部的錯誤承擔編製上的全部責任。"
+            },
+            {
+                q: "28. 下列會計項目之正常餘額為借方者？",
+                options: [
+                    "A. 薪資費用",
+                    "B. 銷貨收入",
+                    "C. 預收收入",
+                    "D. 應付帳款"
+                ],
+                correct: 0,
+                explain: "費用與資產項目的正常餘額在「借方」；負債、權益、收益項目的正常餘額則在「貸方」。薪資費用屬於費用，故為借方餘額。"
+            },
+            {
+                q: "29. 毛利率為：",
+                options: [
+                    "A. 銷貨毛利 / 營業費用",
+                    "B. 銷貨毛利 / 銷貨收入",
+                    "C. 銷貨毛利 / 淨利",
+                    "D. 銷貨毛利 / 營業利益"
+                ],
+                correct: 1,
+                explain: "毛利率 (Gross Profit Margin) = 銷貨毛利 / 銷貨收入, 代表每增加一元收入能創造多少百分比 the 毛利."
+            },
+            {
+                q: "30. 下列會計項目之正常餘額為貸方者？",
+                options: [
+                    "A. 預付費用",
+                    "B. 存貨",
+                    "C. 現金",
+                    "D. 資本"
+                ],
+                correct: 3,
+                explain: "「資本」屬於業主權益類項目，其增加記在貸方，正常餘額為貸方。(A)(B)(C) 均為資產，正常餘額為借方。"
+            },
+            {
+                q: "31. 以下哪個會計報表反映企業在一段時間內的經營成果？",
+                options: [
+                    "A. 現金流量表",
+                    "B. 資產負債表",
+                    "C. 總帳",
+                    "D. 損益表"
+                ],
+                correct: 3,
+                explain: "損益表（或綜合損益表）記錄企業在某一段特定「會計期間」內的收入、費用、損益，用來衡量企業的經營成果。"
+            },
+            {
+                q: "32. 下列有關借貸法則敘述，何者為非？",
+                options: [
+                    "A. 資產增加記於借方，負債減少記於借方",
+                    "B. 負債增加記於貸方，權益減少記於借方",
+                    "C. 收入增加記於借方，費用減少記於貸方",
+                    "D. 費用增加記於借方，資產減少記於貸方"
+                ],
+                correct: 2,
+                explain: "「收入」增加應記於「貸方」而非借方，因此 (C) 選項錯誤。費用增加記借方、減少記貸方。"
+            },
+            {
+                q: "33. 下列何者不應列入查核報告中之查核意見段？",
+                options: [
+                    "A. 財務報表之名稱",
+                    "B. 受查者",
+                    "C. 財務報表之日期",
+                    "D. 查核工作係依照一般公認審計準則執行"
+                ],
+                correct: 3,
+                explain: "「依照一般公認審計準則執行」屬於會計師的責任或查核基礎段說明，不應包含在具體的「查核意見段」中。"
+            },
+            {
+                q: "34. 下列何者不適合作為短期償債能力分析的指標？",
+                options: [
+                    "A. 現金比率",
+                    "B. 流動比率",
+                    "C. 速動比率",
+                    "D. 負債比率"
+                ],
+                correct: 3,
+                explain: "負債比率 (總負債 / 總資產) 反映的是企業整體的財務結構與長期償債風險, 非短期流動性指標."
+            },
+            {
+                q: "35. 負債與權益表示資金之什麼？",
+                options: [
+                    "A. 用途",
+                    "B. 來源",
+                    "C. 成本",
+                    "D. 利潤"
+                ],
+                correct: 1,
+                explain: "資產負債表中，右半邊的「負債與權益」代表資金的「來源」（借入或自籌），左半邊的「資產」則代表資金的「用途」（配置於哪些資產）。"
+            },
+            {
+                q: "36. 甲公司X1年之相關財務資訊如下：折舊費用 $75,000、所得稅費用 $30,000、利息費用 $15,000、淨利 $45,000。請問該公司X1年度利息保障倍數為何？",
+                options: [
+                    "A. 3倍",
+                    "B. 4倍",
+                    "C. 5倍",
+                    "D. 6倍"
+                ],
+                correct: 3,
+                explain: "利息保障倍數 = (稅後淨利 + 所得稅費用 + 利息費用) / 利息費用 = ($45,000 + $30,000 + $15,000) / $15,000 = $90,000 / $15,000 = 6倍。"
+            },
+            {
+                q: "37. 丙商店於年初購入冷氣機一部 $35,000，估計可用6年，殘值 $5,000，採平均法提列折舊，則第三年底調整後帳面金額（帳面價值）為何？",
+                options: [
+                    "A. $30,000",
+                    "B. $25,000",
+                    "C. $20,000",
+                    "D. $15,000"
+                ],
+                correct: 2,
+                explain: "1. 每年折舊 = ($35,000 - $5,000) / 6 = $5,000。\n2. 第三年底累計折舊 = $5,000 * 3 = $15,000。\n3. 第三年底帳面價值 = 成本 $35,000 - 累計折舊 $15,000 = $20,000。"
+            },
+            {
+                q: "38. 財務報表分析主要目的不包括下列哪一項？",
+                options: [
+                    "A. 評估企業財務狀況",
+                    "B. 評估企業經營績效",
+                    "C. 幫助企業隱藏虧損",
+                    "D. 提供決策參考"
+                ],
+                correct: 2,
+                explain: "財務報表分析旨在提供真實、客觀 the 財務資訊以供決策參考, 絕非用於協助企業隱藏虧損 or 進行不實表達."
+            },
+            {
+                q: "39. 資產負債表主要反映的是企業哪一個時間點的財務狀況？",
+                options: [
+                    "A. 某一期間",
+                    "B. 某一特定時間點",
+                    "C. 一整年度的經營成果",
+                    "D. 現金流入流出過程"
+                ],
+                correct: 1,
+                explain: "資產負債表屬於「靜態報表」, 反映 the 企業在「某一特定時間點」 (如期末, 年底) 的財務狀況."
+            },
+            {
+                q: "40. 在 IFRS 實施之後，資產負債表又稱為：",
+                options: [
+                    "A. 綜合損益表",
+                    "B. 現金流量表",
+                    "C. 財務狀況表",
+                    "D. 保留盈餘表"
+                ],
+                correct: 2,
+                explain: "在國際財務報導準則 (IFRS) 實施後, 資產負債表 (Balance Sheet) 的正式名稱變更為「財務狀況表」 (Statement of Financial Position)."
+            },
+            {
+                q: "41. 下列哪一張報表屬於靜態報表？",
+                options: [
+                    "A. 資產負債表",
+                    "B. 綜合損益表",
+                    "C. 現金流量表",
+                    "D. 股東權益變動表"
+                ],
+                correct: 0,
+                explain: "資產負債表反映特定時間點的財務狀況, 為靜態報表; 其餘三張報表皆反映一段期間內的變動, 屬於動態報表."
+            },
+            {
+                q: "42. 綜合損益表主要用來反映企業：",
+                options: [
+                    "A. 某一時間點的資產狀況",
+                    "B. 一定期間內的經營績效",
+                    "C. 現金的來源與用途",
+                    "D. 股東權益結構"
+                ],
+                correct: 1,
+                explain: "綜合損益表 (Income Statement) 是一張「動態報表」, 主要反映企業在「一定期間內」 (如一季, 一年) 的經營成果與營運績效."
+            },
+            {
+                q: "43. 現金流量表主要分為哪三大活動？",
+                options: [
+                    "A. 銷售、採購、生產活動",
+                    "B. 營業、投資、籌資活動",
+                    "C. 資產、負債、權益活動",
+                    "D. 收入、費用、利潤活動"
+                ],
+                correct: 1,
+                explain: "現金流量表 (Statement of Cash Flows) 將企業의 現金流入與流出區分為: 營業活動, 投資活動及籌資 (融資) 活動三大類."
+            },
+            {
+                q: "44. 閱讀財務報表時，首先應先看：",
+                options: [
+                    "A. 每股盈餘",
+                    "B. 會計師查核報告",
+                    "C. 存貨金額",
+                    "D. 營業收入"
+                ],
+                correct: 1,
+                explain: "閱讀財報時, 應先閱讀會計師出具 of 「查核報告」, 以了解財報是否具有公信力以及會計師 the 審計意見類型, 再分析具體數據."
+            },
+            {
+                q: "45. 下列何者不是財務報表分析的限制？",
+                options: [
+                    "A. 只反映過去狀況",
+                    "B. 受會計政策影響",
+                    "C. 可以完全反映企業未來價值",
+                    "D. 報表資料有時效性限制"
+                ],
+                correct: 2,
+                explain: "財務報表主要記錄過去已發生的交易, 且無法包含所有非貨幣性資訊 (如人力資源, 品牌價值), 因此「無法完全反映企業未來價值」, 這正是其分析時 the 局限性."
+            },
+            {
+                q: "46. 垂直分析又稱為：",
+                options: [
+                    "A. 動態分析",
+                    "B. 靜態分析",
+                    "C. 趨勢分析",
+                    "D. 迴歸分析"
+                ],
+                correct: 1,
+                explain: "垂直分析 (Vertical Analysis) 是在單一期間內比較各項目占基準項目的比例 (例如共同比分析), 不涉及時間跨度變動, 因此又稱為「靜態分析」."
+            },
+            {
+                q: "47. 水平分析又稱為：",
+                options: [
+                    "A. 橫向分析",
+                    "B. 共同比分析",
+                    "C. 比率分析",
+                    "D. 靜態分析"
+                ],
+                correct: 0,
+                explain: "水平分析 (Horizontal Analysis) 是比較相鄰數個期間的財務數據變化 (如金額變動 or 百分比變動), 又稱為「橫向分析」 or 「動態分析」."
+            },
+            {
+                q: "48. 共同比資產負債表通常以什麼作為分母？",
+                options: [
+                    "A. 營業收入",
+                    "B. 本期淨利",
+                    "C. 資產總額或負債及權益總計",
+                    "D. 營業成本"
+                ],
+                correct: 2,
+                explain: "共同比資產負債表 (Common-Size Balance Sheet) 中, 各項目均表示為「資產總額」 (or 負債及權益總計) the 百分比, 以此作為計算分母."
+            },
+            {
+                q: "49. 共同比綜合損益表通常以什麼作為分母？",
+                options: [
+                    "A. 資產總額",
+                    "B. 負債總額",
+                    "C. 營業收入",
+                    "D. 股東權益"
+                ],
+                correct: 2,
+                explain: "共同比綜合損益表 (Common-Size Income Statement) 中, 各損益項目均表示為「營業收入」 (淨額) 的百分比, 以其作為計算分母."
+            },
+            {
+                q: "50. 流動比率主要衡量企業的：",
+                options: [
+                    "A. 長期償債能力",
+                    "B. 短期償債能力",
+                    "C. 獲利能力",
+                    "D. 經營效率"
+                ],
+                correct: 1,
+                explain: "流動比率 = 流動資產 / 流動負債, 用來衡量企業在一年 or 一個營業週期內, 償還流動負債 the 「短期償債能力」."
+            },
+            {
+                q: "51. 一般而言，流動比率通常以多少以上較為標準？",
+                options: [
+                    "A. 50%",
+                    "B. 100%",
+                    "C. 150%",
+                    "D. 200%"
+                ],
+                correct: 3,
+                explain: "在傳統信用分析中, 流動比率一般以 200% (2:1) 以上為較安全的短期償債能力標準, 但仍需視行業特性而定."
+            },
+            {
+                q: "52. 速動資產等於：",
+                options: [
+                    "A. 流動資產－固定資產",
+                    "B. 流動資產－存貨－預付費用",
+                    "C. 總資產－流動負債",
+                    "D. 股東權益－負債"
+                ],
+                correct: 1,
+                explain: "速動資產 (Quick Assets) 是指變現能力極強 of 流動資產, 計算公式為: 流動資產 - 存貨 - 預付費用."
+            },
+            {
+                q: "53. 負債比率主要用來衡量：",
+                options: [
+                    "A. 獲利能力",
+                    "B. 長期償債能力",
+                    "C. 存貨管理能力",
+                    "D. 應收帳款回收能力"
+                ],
+                correct: 1,
+                explain: "負債比率 = 總負債 / 總資產, 用以衡量企業總資產中由債權人融資 of 比率, 是評估「長期償債能力」與財務結構風險 the 重要指標."
+            },
+            {
+                q: "54. 權益比率與負債比率的關係為：",
+                options: [
+                    "A. 兩者相乘等於 1",
+                    "B. 兩者相加等於 1",
+                    "C. 兩者相減等於 1",
+                    "D. 兩者沒有關係"
+                ],
+                correct: 1,
+                explain: "因為 資產 = 負債 + 股東權益, 所以 (總負債/總資產) + (股東權益/總資產) = 1. 即: 負債比率 + 權益比率 = 100% (or 1)."
+            },
+            {
+                q: "55. 利息保障倍數越高，代表：",
+                options: [
+                    "A. 企業支付利息能力越強",
+                    "B. 企業存貨越多",
+                    "C. 企業現金越少",
+                    "D. 企業負債一定越高"
+                ],
+                correct: 0,
+                explain: "利息保障倍數 = 稅前息前折舊前利潤 (EBIT) / 利息費用. 倍數越高, 說明企業賺取 the 盈餘越足以支付利息費用, 償付利息能力越強."
+            },
+            {
+                q: "56. 毛利率越高，通常表示：",
+                options: [
+                    "A. 產品利潤幅度較大",
+                    "B. 企業負債越高",
+                    "C. 應收帳款回收越慢",
+                    "D. 企業現金流一定不好"
+                ],
+                correct: 0,
+                explain: "毛利率 = 銷貨毛利 / 營業收入. 毛利率越高, 代表產品的附加價值較高, or 生產成本控制得宜, 通常表示產品利潤幅度較大."
+            },
+            {
+                q: "57. 每股盈餘 EPS 代表：",
+                options: [
+                    "A. 每一普通股可獲得的盈餘",
+                    "B. 每一元資產創造的收入",
+                    "C. 每一元負債產生的利息",
+                    "D. 每一元銷售產生的現金"
+                ],
+                correct: 0,
+                explain: "每股盈餘 (EPS) = (本期淨利 - 特別股股利) / 加權平均流通在外普通股股數, 代表每一普通股可分配 or 獲得 of 本期淨盈餘."
+            }
+        ];
+
+        let currentData = {
+            config: {...DEFAULT_CONFIG},
+            questions: [...DEFAULT_QUESTIONS]
+        };
+
+        let state = {
+            currentIdx: 0,
+            score: 0,
+            isAnswered: false,
+            flashIdx: 0,
+            chart: null,
+            autoNextTimeout: null,
+            countdownInterval: null
+        };
+
+        // --- CORE FUNCTIONS ---
+        function initApp() {
+            loadFromStorage();
+            updateDashboard();
+            document.getElementById('json-input').value = JSON.stringify(currentData, null, 2);
+        }
+
+        function switchView(viewId) {
+            clearTimers();
+            document.querySelectorAll('.view-section').forEach(v => v.classList.add('hidden'));
+            document.getElementById(`view-${viewId}`).classList.remove('hidden');
+            
+            if (viewId === 'quiz') startQuiz();
+            if (viewId === 'flashcards') startFlashcards();
+            window.scrollTo(0, 0);
+        }
+
+        function updateDashboard() {
+            document.getElementById('home-title').textContent = currentData.config.title;
+            document.getElementById('home-author').textContent = currentData.config.author;
+            document.getElementById('home-date').textContent = "📅 " + currentData.config.date;
+            document.getElementById('home-school').textContent = currentData.config.school;
+            document.getElementById('stat-questions').textContent = currentData.questions.length;
+            document.getElementById('stat-likes').textContent = currentData.config.likes;
+            document.getElementById('stat-downloads').textContent = currentData.config.downloads;
+        }
+
+        function incrementLike() {
+            currentData.config.likes++;
+            saveToStorage();
+            updateDashboard();
+            showToast("❤️ Đã thích tài liệu này!");
+        }
+
+        function clearTimers() {
+            if (state.autoNextTimeout) {
+                clearTimeout(state.autoNextTimeout);
+                state.autoNextTimeout = null;
+            }
+            if (state.countdownInterval) {
+                clearInterval(state.countdownInterval);
+                state.countdownInterval = null;
+            }
+        }
+
+        // --- QUIZ LOGIC ---
+        function startQuiz() {
+            clearTimers();
+            state.currentIdx = 0;
+            state.score = 0;
+            state.isAnswered = false;
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            clearTimers();
+            const question = currentData.questions[state.currentIdx];
+            const container = document.getElementById('question-card');
+            const total = currentData.questions.length;
+            
+            document.getElementById('quiz-progress-text').textContent = `Câu ${state.currentIdx + 1}/${total}`;
+            document.getElementById('quiz-progress-bar').style.width = `${((state.currentIdx + 1) / total) * 100}%`;
+
+            let optionsHtml = '';
+            question.options.forEach((opt, i) => {
+                optionsHtml += `
+                    <button onclick="checkAnswer(${i})" id="opt-${i}" 
+                            class="w-full text-left p-4 rounded-xl border-2 border-slate-100 hover:border-blue-200 hover:bg-blue-50/50 transition font-medium flex items-center gap-4 mb-3 shadow-sm btn-animate">
+                        <span class="w-8 h-8 flex items-center justify-center bg-slate-100 rounded-lg font-bold text-slate-500">${String.fromCharCode(65 + i)}</span>
+                        <span class="flex-1 text-slate-700">${opt}</span>
+                    </button>
+                `;
+            });
+
+            container.innerHTML = `
+                <div class="mb-4">
+                    <span class="bg-indigo-50 text-indigo-700 text-xs px-2.5 py-1 rounded-md font-bold">CÂU ${state.currentIdx + 1}</span>
+                </div>
+                <h3 class="text-lg md:text-xl font-bold mb-6 text-slate-800 leading-relaxed">${question.q}</h3>
+                <div class="space-y-2">${optionsHtml}</div>
+                <div id="feedback" class="mt-8 hidden duration-300">
+                    <div id="feedback-box" class="p-5 rounded-2xl border-2 mb-6">
+                        <p id="feedback-title" class="font-extrabold text-lg mb-2"></p>
+                        <p id="feedback-text" class="text-sm leading-relaxed"></p>
+                    </div>
+                    <button onclick="nextQuestion()" id="next-btn" class="w-full bg-slate-900 text-white py-3.5 rounded-xl font-bold hover:bg-slate-800 shadow-lg hover:shadow-slate-200 transition btn-animate flex items-center justify-center gap-1">
+                        ${state.currentIdx + 1 < total ? 'Câu tiếp theo / 下一題 →' : 'Xem kết quả / 看結果 🎉'}
+                    </button>
+                </div>
+            `;
+            state.isAnswered = false;
+        }
+
+        function checkAnswer(idx) {
+            if (state.isAnswered) return;
+            state.isAnswered = true;
+            
+            const question = currentData.questions[state.currentIdx];
+            const isCorrect = (idx === question.correct);
+            if (isCorrect) state.score++;
+
+            question.options.forEach((_, i) => {
+                const btn = document.getElementById(`opt-${i}`);
+                if (i === question.correct) {
+                    btn.classList.add('border-emerald-500', 'bg-emerald-50', 'text-emerald-800');
+                    btn.querySelector('span').classList.replace('bg-slate-100', 'bg-emerald-500');
+                    btn.querySelector('span').classList.replace('text-slate-500', 'text-white');
+                } else if (i === idx) {
+                    btn.classList.add('border-rose-500', 'bg-rose-50', 'text-rose-800');
+                    btn.querySelector('span').classList.replace('bg-slate-100', 'bg-rose-500');
+                    btn.querySelector('span').classList.replace('text-slate-500', 'text-white');
+                } else {
+                    btn.classList.add('opacity-40');
+                }
+            });
+
+            const feedback = document.getElementById('feedback');
+            const box = document.getElementById('feedback-box');
+            feedback.classList.remove('hidden');
+            
+            if (isCorrect) {
+                box.className = "p-5 rounded-2xl border-2 border-emerald-200 bg-emerald-50 text-emerald-900 shadow-sm";
+                document.getElementById('feedback-title').textContent = "Chính xác / 答對了! ✨";
+            } else {
+                box.className = "p-5 rounded-2xl border-2 border-rose-200 bg-rose-50 text-rose-900 shadow-sm";
+                document.getElementById('feedback-title').textContent = "Chưa đúng rồi / 答錯了 💡";
+            }
+            document.getElementById('feedback-text').innerHTML = `<strong>解析 / Giải thích:</strong> <br/>${question.explain}`;
+
+            const nextBtn = document.getElementById('next-btn');
+            const total = currentData.questions.length;
+            const isLast = (state.currentIdx + 1 === total);
+            let secondsLeft = 2;
+
+            const btnBaseText = isLast ? 'Xem kết quả / 看結果 🎉' : 'Câu tiếp theo / 下一題 →';
+            nextBtn.innerHTML = `${btnBaseText} (Tự động chuyển sau ${secondsLeft}s)`;
+
+            state.countdownInterval = setInterval(() => {
+                secondsLeft--;
+                if (secondsLeft > 0) {
+                    nextBtn.innerHTML = `${btnBaseText} (Tự động chuyển sau ${secondsLeft}s)`;
+                } else {
+                    clearInterval(state.countdownInterval);
+                }
+            }, 1000);
+
+            state.autoNextTimeout = setTimeout(() => {
+                nextQuestion();
+            }, 2000);
+        }
+
+        function nextQuestion() {
+            clearTimers();
+            state.currentIdx++;
+            if (state.currentIdx < currentData.questions.length) {
+                renderQuestion();
+            } else {
+                showFinalResults();
+            }
+        }
+
+        function showFinalResults() {
+            clearTimers();
+            switchView('result');
+            const total = currentData.questions.length;
+            const wrong = total - state.score;
+            
+            document.getElementById('score-correct').textContent = state.score;
+            document.getElementById('score-wrong').textContent = wrong;
+
+            if (state.chart) state.chart.destroy();
+            const ctx = document.getElementById('resultChart').getContext('2d');
+            state.chart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Đúng (Correct)', 'Sai (Wrong)'],
+                    datasets: [{
+                        data: [state.score, wrong],
+                        backgroundColor: ['#10b981', '#f43f5e'],
+                        borderWidth: 4,
+                        borderColor: '#ffffff',
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { 
+                            position: 'bottom',
+                            labels: {
+                                font: {
+                                    weight: 'bold'
+                                }
+                            }
+                        }
+                    },
+                    cutout: '75%'
+                }
+            });
+        }
+
+        // --- FLASHCARDS LOGIC ---
+        function startFlashcards() {
+            state.flashIdx = 0;
+            renderFlashcard();
+        }
+
+        function flipCard() {
+            document.getElementById('card-inner').classList.toggle('is-flipped');
+        }
+
+        function renderFlashcard() {
+            const question = currentData.questions[state.flashIdx];
+            document.getElementById('card-inner').classList.remove('is-flipped');
+            
+            setTimeout(() => {
+                document.getElementById('flash-front-text').textContent = question.q;
+                document.getElementById('flash-back-text').textContent = question.options[question.correct];
+                document.getElementById('flash-counter').textContent = `${state.flashIdx + 1} / ${currentData.questions.length}`;
+            }, 150);
+        }
+
+        // --- FLASHCARDS NAVIGATION ---
+        function nextFlashcard() {
+            state.flashIdx = (state.flashIdx + 1) % currentData.questions.length;
+            renderFlashcard();
+        }
+
+        function prevFlashcard() {
+            state.flashIdx = (state.flashIdx - 1 + currentData.questions.length) % currentData.questions.length;
+            renderFlashcard();
+        }
+
+        // --- DATA MANAGEMENT ---
+        function updateData() {
+            try {
+                const newData = JSON.parse(document.getElementById('json-input').value);
+                if (!newData.questions || !Array.isArray(newData.questions)) {
+                    throw new Error("Dữ liệu không đúng định dạng.");
+                }
+                currentData = newData;
+                saveToStorage();
+                updateDashboard();
+                showToast("✅ Cập nhật bộ đề thành công!");
+                switchView('home');
+            } catch (e) {
+                alert("Lỗi định dạng JSON! Vui lòng kiểm tra kỹ cú pháp.");
+            }
+        }
+
+        function resetToDefault() {
+            if (confirm("Bạn có chắc chắn muốn khôi phục đề thi mặc định ban đầu?")) {
+                currentData = { config: {...DEFAULT_CONFIG}, questions: [...DEFAULT_QUESTIONS] };
+                document.getElementById('json-input').value = JSON.stringify(currentData, null, 2);
+                saveToStorage();
+                updateDashboard();
+                showToast("↩️ Đã khôi phục đề thi gốc!");
+                switchView('home');
+            }
+        }
+
+        // --- LOCAL STORAGE ---
+        function saveToStorage() {
+            localStorage.setItem('accounting_quiz_v2', JSON.stringify(currentData));
+        }
+
+        function loadFromStorage() {
+            const stored = localStorage.getItem('accounting_quiz_v2');
+            if (stored) {
+                try {
+                    currentData = JSON.parse(stored);
+                } catch(e) {
+                    console.error("Error reading storage, loading default data.", e);
+                }
+            }
+        }
+
+        // --- UTILITY UI FUNCTIONS ---
+        function showToast(message) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = "bg-slate-900 text-white text-xs font-bold px-4 py-3 rounded-xl shadow-xl border border-slate-700 animate-slide-in pointer-events-auto transition-opacity duration-300";
+            toast.textContent = message;
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function copyCurrentLink() {
+            const dummyInput = document.createElement('input');
+            document.body.appendChild(dummyInput);
+            dummyInput.value = window.location.href;
+            dummyInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(dummyInput);
+            showToast("📋 Đã sao chép liên kết vào bộ nhớ tạm!");
+        }
+
+        function showQRCode() {
+            document.getElementById('modal-title').textContent = "Mã QR đề ôn thi";
+            const currentUrl = encodeURIComponent(window.location.href);
+            const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${currentUrl}`;
+            document.getElementById('qr-image').src = qrApiUrl;
+            document.getElementById('modal-container').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('modal-container').classList.add('hidden');
+        }
+
+        function toastShare(platform) {
+            showToast(`🌐 Đang mở chia sẻ qua ${platform}...`);
+        }
+
+        window.onload = initApp;
+    </script>
+</body>
+</html>
